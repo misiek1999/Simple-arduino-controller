@@ -47,4 +47,9 @@ struct JoystickData {
     JoystickDirection y_direction;
 };
 
+struct PadData {
+    JoystickData joystick;
+    ButtonStates buttons;
+};
+
 #endif // JOYSTICK_SHIELD_STRUCT_H
