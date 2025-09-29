@@ -51,7 +51,7 @@ inline void dump_bluepad_driver_data(const BP32Data::PackedControllerData & data
             data.accel[0],      // Accelerometer X
             data.accel[1],      // Accelerometer Y
             data.accel[2]);     // Accelerometer Z
-        LOG_DEBUG("%s", buf);
+        LOG_VERBOSE("%s", buf);
     }
 }
 
