@@ -24,6 +24,7 @@ constexpr int NRF24L01_MOSI_PIN = 11;       /// < nRF24L01 MOSI pin
 constexpr int NRF24L01_MISO_PIN = 12;       /// < nRF24L01 MISO pin
 constexpr int NRF24L01_SCK_PIN  = 13;       /// < nRF24L01 SCK pin
 
-constexpr int VOLTAGE_MONITOR_PIN = A2;     /// < Voltage monitor pin (if used)
+constexpr int VOLTAGE_MONITOR_PIN = A2;     /// < Voltage monitor pin
+constexpr int LOW_VOLTAGE_LED_PIN = A3;     /// < Low voltage indicator LED pin
 
 #endif
