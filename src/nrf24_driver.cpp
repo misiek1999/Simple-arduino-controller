@@ -35,7 +35,6 @@ bool RF24Driver::NRF24Controller::init() {
         radio_.stopListening();
         this->is_initialized_ = true;
         result = true;
-        radio_.printPrettyDetails();
         LOG_INFO("NRF24Controller initialization done");
     } else {
         LOG_WARNING("NRF24Controller initialization failed");
