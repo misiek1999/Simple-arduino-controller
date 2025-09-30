@@ -5,12 +5,14 @@
 #include "pin_config.h"
 #include "nrf24_driver.h"
 #include "gamepad_struct_converter.h"
-
+#include "bluetooth_transmitter.h"
 
 // Global data structures
 JoystickData joystick_data;
 ButtonStates button_states;
 CalibrationData calibration_data;
+// Global variables
+bool is_bluetooth_mode = false;
 
 //use single static instance of nrf24l01 driver
 inline RF24Driver::NRF24Controller& getNRF24ControllerInstance() {
@@ -19,6 +21,11 @@ inline RF24Driver::NRF24Controller& getNRF24ControllerInstance() {
         NRF24L01_CSN_PIN
     );
     return nrf24_controller;
+}
+
+inline BluetoothTransmitter& getBluetoothTransmitterInstance() {
+    static BluetoothTransmitter bluetooth_transmitter;
+    return bluetooth_transmitter;
 }
 
 bool checkBatteryVoltage() {
@@ -38,20 +45,27 @@ bool checkBatteryVoltage() {
 void setup() {
     // Set up low voltage LED pin
     pinMode(LOW_VOLTAGE_LED_PIN, OUTPUT);
+    pinMode(SWITCH_TRANSMISSION_MODE_PIN, INPUT_PULLUP);
     digitalWrite(LOW_VOLTAGE_LED_PIN, LOW); // Turn off LED initially
 
+
+#ifndef ENABLE_BLE_SERIAL
     // Initialize serial communication
     Serial.begin(kSerialBaudRate);
-
     // Initialize logging
     initLog();
-
+    #endif
     // Initialize joystick shield
     JoystickShieldSetup();
 
     // Perform initial calibration
     CalibrateJoystick(&calibration_data);
 
+#ifdef ENABLE_BLE_SERIAL
+    // changeLogLevel(LOG_LEVEL_SILENT);
+    auto& bluetooth = getBluetoothTransmitterInstance();
+    bluetooth.Initialize();
+#endif
     // Initialize NRF24L01 driver
     auto& nrf24 = getNRF24ControllerInstance();
     if (!nrf24.init()) {
@@ -72,6 +86,25 @@ void loop() {
     PrintJoystickData(&joystick_data);
     PrintActiveButtons(&button_states);
 
+    if (digitalRead(SWITCH_TRANSMISSION_MODE_PIN) == LOW) {
+        if (!is_bluetooth_mode) {
+            LOG_INFO("Enable Bluetooth mode");
+            is_bluetooth_mode = true;
+        }
+    } else {
+        if (is_bluetooth_mode) {
+            LOG_INFO("Disable Bluetooth mode");
+            is_bluetooth_mode = false;
+        }
+    }
+    // if (is_bluetooth_mode) {
+#ifdef ENABLE_BLE_SERIAL
+        auto& bluetooth = getBluetoothTransmitterInstance();
+        if (!bluetooth.SendSpeedCommand(joystick_data.x_calibrated, joystick_data.y_calibrated)) {
+            LOG_DEBUG("Failed to send speed command via Bluetooth");
+        }
+#endif
+    // }
     PadData pad_data{
         .joystick = joystick_data,
         .buttons = button_states
@@ -89,13 +122,13 @@ void loop() {
     } else {
         LOG_WARNING("NRF24L01 driver is not initialized");
     }
+    dump_bluepad_driver_data(controller_data);
 
-    // Optional: Check battery voltage and log if low
+
     if (checkBatteryVoltage()) {
         digitalWrite(LOW_VOLTAGE_LED_PIN, HIGH); // Turn on LED to indicate low voltage
         LOG_FATAL("Battery voltage is low!");
     }
 
-    dump_bluepad_driver_data(controller_data);
     delayMicroseconds(kMainLoopCycleTimeUs);
 }

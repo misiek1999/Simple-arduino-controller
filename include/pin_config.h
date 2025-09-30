@@ -26,5 +26,6 @@ constexpr int NRF24L01_SCK_PIN  = 13;       /// < nRF24L01 SCK pin
 
 constexpr int VOLTAGE_MONITOR_PIN = A2;     /// < Voltage monitor pin
 constexpr int LOW_VOLTAGE_LED_PIN = A3;     /// < Low voltage indicator LED pin
+constexpr int SWITCH_TRANSMISSION_MODE_PIN = A4; /// < Switch transmission mode pin
 
 #endif
